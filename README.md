@@ -12,6 +12,7 @@ Url to test: `http://example.com/api/v1`
 - Customizable timeout, retries, and number of concurrent workers.
 - Outputs results to a file.
 - Handles SSL warnings.
+- Will accept URL-lists with or without https:// prefix
   
 ![image](https://github.com/hitem/endpointchecker/assets/8977898/37765f6d-da70-4f64-b991-c4ab7c6780ad)
 
@@ -44,12 +45,6 @@ Check endpoints from a URL list:
 
 ## Output
 The results will be written to the specified output file, organized by HTTP status codes.
-
-## Extra
-You can use following command to add `https://` and `/` to your URL list if its lacking:
-```bash
-> sed 's|^|https://|; s|$|/|' yourfile.txt
-```
 
 ## Author
 - **hitemSec**

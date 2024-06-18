@@ -112,9 +112,18 @@ with open(args.endpoints, 'r') as file:
 
 # Function to make a request and return the result
 def check_url(url, endpoint, timeout, retries):
-    full_url = f"https://{url}/{endpoint}"
+    # Check if URL already has 'http' or 'https' scheme
+    if not url.startswith(('http://', 'https://')):
+        full_url = f"https://{url}/{endpoint}"
+    else:
+        full_url = f"{url}/{endpoint}"
+        
+    full_url = full_url.rstrip('/')  # Remove trailing slash if any
+
     attempt = 0
     while attempt < retries:
+        if not running:
+            return None
         try:
             response = requests.get(full_url, timeout=timeout, verify=False)
             return full_url, response.status_code
@@ -139,15 +148,17 @@ def check_endpoints(urls, endpoints, timeout, workers, retries, output_file):
             for future in as_completed(futures):
                 if not running:
                     break
-                full_url, status = future.result()
-                results[status].append(full_url)
-                completed_requests += 1
+                result = future.result()
+                if result:
+                    full_url, status = result
+                    results[status].append(full_url)
+                    completed_requests += 1
 
-                # Print to terminal only if status is 200
-                if status == 200:
-                    print(f"[{Fore.GREEN}{status}{Style.RESET_ALL}] {full_url}")
+                    # Print to terminal only if status is 200
+                    if status == 200:
+                        print(f"[{Fore.GREEN}{status}{Style.RESET_ALL}] {full_url}")
 
-                print(f"Completed {completed_requests}/{total_requests} requests", end='\r')
+                    print(f"Completed {completed_requests}/{total_requests} requests", end='\r')
 
     return results
 
