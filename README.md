@@ -2,6 +2,11 @@
 Endpointchecker is a Python script designed to check for specific endpoints on provided URLs. This tool enhances your reconnaissance by automating the process of verifying endpoint availability across multiple URLs.
 Ive also added a basic wordlist for apiendpoints located in ```/wordlist/```.
 
+Example: \
+Input URL file: `http://example.com` \
+Input Endpoint wordlist: `/api/v1` \
+Url to test: `http://example.com/api/v1`
+
 ## Features
 - Multi-threaded for fast execution.
 - Customizable timeout, retries, and number of concurrent workers.
