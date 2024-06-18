@@ -8,7 +8,8 @@ Ive also added a basic wordlist for apiendpoints located in ```/wordlist/```.
 - Outputs results to a file.
 - Handles SSL warnings.
   
-![image](https://github.com/hitem/endpointchecker/assets/8977898/5a310f15-9f6e-4e0c-a6dd-b400d5d660f4)
+![image](https://github.com/hitem/endpointchecker/assets/8977898/ca766b11-fd95-427b-8635-b9f5290fca97)
+
 
 ## Installation
 To run this script, you need to have Python 3 and the required packages installed. You can install the necessary packages using:
