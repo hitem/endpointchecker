@@ -9,6 +9,8 @@ Ive also added a basic wordlist for apiendpoints located in ```/wordlist/```.
 - Customizable timeout, retries, and number of concurrent workers.
 - Outputs results to a file.
 - Handles SSL warnings.
+  
+![image](https://github.com/hitem/endpointchecker/assets/8977898/5a310f15-9f6e-4e0c-a6dd-b400d5d660f4)
 
 ## Installation
 To run this script, you need to have Python 3 and the required packages installed. You can install the necessary packages using:
