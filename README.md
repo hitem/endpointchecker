@@ -1,6 +1,4 @@
 # Endpointchecker
-
-## Overview
 Endpointchecker is a Python script designed to check for specific endpoints on provided URLs. This tool enhances your reconnaissance by automating the process of verifying endpoint availability across multiple URLs.
 Ive also added a basic wordlist for apiendpoints located in ```/wordlist/```.
 
@@ -14,16 +12,14 @@ Ive also added a basic wordlist for apiendpoints located in ```/wordlist/```.
 
 ## Installation
 To run this script, you need to have Python 3 and the required packages installed. You can install the necessary packages using:
-
-
 ```bash
-pip install requests colorama
+> pip install requests colorama
 ```
 
 ## Usage
-### Basic Command
 ```bash
-python3 endpointchecker.py [OPTIONS]
+> python3 endpointchecker.py [OPTIONS]
+> python3 endpointchecker.py -h [--help]
 ```
 ### Options
 - `-u, --urls`: Path to the URL list file (required).
@@ -37,7 +33,7 @@ python3 endpointchecker.py [OPTIONS]
 
 Check endpoints from a URL list:
 ```bash
-python3 endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 5 -w 10 -r 3
+> python3 endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 5 -w 10 -r 3
 ```
 
 ## Output

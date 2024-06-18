@@ -65,14 +65,14 @@ def print_logo_and_instructions():
     instructions = f"""
     {rainbow_logo}{Style.RESET_ALL}
     {Fore.LIGHTBLACK_EX}Improve your reconnaissance by {Fore.RED}hitemSec{Style.RESET_ALL}
-    {Fore.LIGHTBLACK_EX}How-To: {Fore.YELLOW}python3 .\\endpointchecker.py -h{Style.RESET_ALL}
+    {Fore.LIGHTBLACK_EX}How-To: {Fore.YELLOW}python3 endpointchecker.py -h{Style.RESET_ALL}
 
     {Fore.GREEN}Endpointchecker - Usage Instructions{Style.RESET_ALL}
     {Fore.YELLOW}------------------------------------{Style.RESET_ALL}
     This tool checks for specific endpoints on provided URLs.
     
     {Fore.YELLOW}Usage:{Style.RESET_ALL}
-    python3 .\\endpointchecker.py [OPTIONS]
+    python3 endpointchecker.py [OPTIONS]
     
     {Fore.YELLOW}Options:{Style.RESET_ALL}
     -u, --urls          Path to the URL list file
@@ -84,7 +84,7 @@ def print_logo_and_instructions():
     
     {Fore.YELLOW}Examples:{Style.RESET_ALL}
     Check endpoints from a URL list:
-        python3 .\\endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 5 -w 10 -r 3
+        python3 endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 5 -w 10 -r 3
 
     {Fore.GREEN}Happy Recon!{Style.RESET_ALL}
     """
