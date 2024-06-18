@@ -13,7 +13,7 @@ Url to test: `http://example.com/api/v1`
 - Outputs results to a file.
 - Handles SSL warnings.
   
-![image](https://github.com/hitem/endpointchecker/assets/8977898/ca766b11-fd95-427b-8635-b9f5290fca97)
+![image](https://github.com/hitem/endpointchecker/assets/8977898/37765f6d-da70-4f64-b991-c4ab7c6780ad)
 
 
 ## Installation
