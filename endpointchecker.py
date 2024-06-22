@@ -8,10 +8,11 @@
 
 import aiohttp
 import asyncio
+import logging
 from urllib3.exceptions import InsecureRequestWarning
 from colorama import Fore, Style, init
 import argparse
-from collections import defaultdict, OrderedDict
+from collections import defaultdict
 import signal
 import sys
 import itertools
@@ -22,6 +23,11 @@ urllib3.disable_warnings(InsecureRequestWarning)
 
 # Initialize colorama
 init()
+
+# Setup logging to filter out specific asyncio connection reset errors
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("asyncio")
+logger.setLevel(logging.ERROR)
 
 # Global variable to handle script running status
 running = True
@@ -197,10 +203,6 @@ async def check_endpoints_in_batches(urls, endpoints, timeout, workers, retries,
 
                         # Print progress
                         print(f"\rProcessing {completed_requests} of {total_requests} requests", end='', flush=True)
-
-                    # Debug output to show we are making progress
-                    if completed_requests % 100 == 0:
-                        print(f"\rProcessed {completed_requests} requests so far.", end='', flush=True)
 
     return results
 
