@@ -6,18 +6,19 @@
 # mastodon: @hitem@infosec.exchange 
 # # # # # # # # # # # # # # # # # # # # # # # #
 
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+import aiohttp
+import asyncio
+from urllib3.exceptions import InsecureRequestWarning
 from colorama import Fore, Style, init
 import argparse
-from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections import defaultdict, OrderedDict
 import signal
 import sys
-import time
+import itertools
 
 # Disable SSL warnings (use with caution)
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+import urllib3
+urllib3.disable_warnings(InsecureRequestWarning)
 
 # Initialize colorama
 init()
@@ -81,10 +82,12 @@ def print_logo_and_instructions():
     -t, --timeout       Timeout for each request in seconds (default: 5)
     -w, --workers       Number of concurrent threads (default: 10)
     -r, --retries       Number of retries for each request (default: 3)
+    -b, --batchsize     Number of requests per batch (default: 1000)
+    -s, --statuscodes   Comma-separated list of status codes to save (default: 200,500)
     
     {Fore.YELLOW}Examples:{Style.RESET_ALL}
     Check endpoints from a URL list:
-        python3 endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 5 -w 10 -r 3
+        python3 endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 5 -w 10 -r 3 -s 200,500
 
     {Fore.GREEN}Happy Recon!{Style.RESET_ALL}
     """
@@ -98,82 +101,134 @@ parser.add_argument('-o', '--output', required=True, help='Output file for resul
 parser.add_argument('-t', '--timeout', type=int, default=5, help='Timeout for each request in seconds')
 parser.add_argument('-w', '--workers', type=int, default=10, help='Number of concurrent workers')
 parser.add_argument('-r', '--retries', type=int, default=3, help='Number of retries for each request')
+parser.add_argument('-b', '--batchsize', type=int, default=1000, help='Number of requests per batch')
+parser.add_argument('-s', '--statuscodes', default='200,500', help='Comma-separated list of status codes to save')
 
 # Parse arguments
 args = parser.parse_args()
+statuscodes = [int(code) for code in args.statuscodes.split(',')]
 
 # Read URLs from file
 with open(args.urls, 'r') as file:
-    urls = [line.strip() for line in file.readlines()]
+    urls = [line.strip().rstrip('/') for line in file.readlines()]
 
 # Read endpoints from file
 with open(args.endpoints, 'r') as file:
-    endpoints = [line.strip() for line in file.readlines()]
+    endpoints = [line.strip().lstrip('/') for line in file.readlines()]
+
+# Function to get the color based on the status code
+def get_color(status_code):
+    if 100 <= status_code < 200:
+        return Fore.BLUE
+    elif 200 <= status_code < 300:
+        return Fore.GREEN
+    elif 300 <= status_code < 400:
+        return Fore.CYAN
+    elif 400 <= status_code < 500:
+        return Fore.RED
+    elif 500 <= status_code < 600:
+        return Fore.MAGENTA
+    else:
+        return Fore.WHITE
 
 # Function to make a request and return the result
-def check_url(url, endpoint, timeout, retries):
-    # Check if URL already has 'http' or 'https' scheme
-    if not url.startswith(('http://', 'https://')):
-        full_url = f"https://{url}/{endpoint}"
-    else:
-        full_url = f"{url}/{endpoint}"
-        
-    full_url = full_url.rstrip('/')  # Remove trailing slash if any
-
+async def check_url(session, url, endpoint, timeout, retries):
+    # Construct the full URL
+    full_url = f"{url}/{endpoint}"
+    
     attempt = 0
     while attempt < retries:
         if not running:
             return None
         try:
-            response = requests.get(full_url, timeout=timeout, verify=False)
-            return full_url, response.status_code
-        except requests.RequestException as e:
+            async with session.get(full_url, timeout=timeout, ssl=False) as response:
+                return full_url, response.status
+        except aiohttp.ClientConnectionError:
+            attempt += 1
+            if attempt == retries:
+                return full_url, 'Connection Error'
+            await asyncio.sleep(1)
+        except Exception as e:
             attempt += 1
             if attempt == retries:
                 return full_url, str(e)
-            time.sleep(1)
+            await asyncio.sleep(1)
 
-# Function to check URLs and endpoints using multiple workers
-def check_endpoints(urls, endpoints, timeout, workers, retries, output_file):
+# Function to check URLs and endpoints using multiple workers in batches
+async def check_endpoints_in_batches(urls, endpoints, timeout, workers, retries, output_file, batch_size):
     results = defaultdict(list)
     total_requests = len(urls) * len(endpoints)
     completed_requests = 0
 
-    with open(output_file, 'w') as file:
-        with ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = [
-                executor.submit(check_url, url, endpoint, timeout, retries)
-                for url in urls for endpoint in endpoints
-            ]
-            for future in as_completed(futures):
-                if not running:
-                    break
-                result = future.result()
-                if result:
-                    full_url, status = result
-                    results[status].append(full_url)
-                    completed_requests += 1
+    print(f"Total requests to process: {total_requests}")
 
-                    # Print to terminal only if status is 200
-                    if status == 200:
-                        print(f"[{Fore.GREEN}{status}{Style.RESET_ALL}] {full_url}")
+    async with aiohttp.ClientSession() as session:
+        with open(output_file, 'a') as file:
+            for batch_start in range(0, total_requests, batch_size):
+                batch_end = min(batch_start + batch_size, total_requests)
+                current_batch = itertools.islice(
+                    ((url, endpoint) for url in urls for endpoint in endpoints),
+                    batch_start, batch_end
+                )
 
-                    print(f"Completed {completed_requests}/{total_requests} requests", end='\r')
+                tasks = [
+                    check_url(session, url, endpoint, timeout, retries)
+                    for url, endpoint in current_batch
+                ]
+
+                for future in asyncio.as_completed(tasks):
+                    if not running:
+                        break
+                    result = await future
+                    if result:
+                        full_url, status = result
+                        results[status].append(full_url)
+                        completed_requests += 1
+
+                        # Print to terminal with appropriate color
+                        if isinstance(status, int) and status in statuscodes:
+                            color = get_color(status)
+                            print(f"\r{' ' * 80}\r[{color}{status}{Style.RESET_ALL}] {full_url}")
+
+                        # Write result to file if status is in specified status codes
+                        if status in statuscodes:
+                            file.write(f"[{status}] {full_url}\n")
+                            file.flush()
+
+                        # Print progress
+                        print(f"\rProcessing {completed_requests} of {total_requests} requests", end='', flush=True)
+
+                    # Debug output to show we are making progress
+                    if completed_requests % 100 == 0:
+                        print(f"\rProcessed {completed_requests} requests so far.", end='', flush=True)
 
     return results
 
 # Write results to file
-def write_results_to_file(results, output_file):
+def write_results_to_file(output_file):
+    status_groups = defaultdict(list)
+
+    with open(output_file, 'r') as file:
+        lines = file.readlines()
+
+    # Remove status code prefixes and sort into groups
+    for line in lines:
+        if line.startswith('[') and ']' in line:
+            status, url = line.split('] ')
+            status = status[1:]
+            status_groups[status].append(url.strip())
+
+    # Remove duplicates and sort each status group
+    for status in status_groups:
+        status_groups[status] = sorted(set(status_groups[status]))
+
+    # Write sorted results back to file
     with open(output_file, 'w') as file:
-        if 200 in results:
-            file.write("[200]\n")
-            for url in sorted(results[200]):
+        for status in sorted(status_groups.keys(), key=int):
+            file.write(f"[{status}]\n")
+            for url in status_groups[status]:
                 file.write(f"{url}\n")
-        for status in sorted(results.keys(), key=lambda x: (isinstance(x, int), x)):
-            if status != 200:
-                file.write(f"[{status}]\n")
-                for url in sorted(results[status]):
-                    file.write(f"{url}\n")
+            file.write("\n")
 
 def signal_handler(sig, frame):
     global running
@@ -189,8 +244,11 @@ print_logo_and_instructions()
 
 try:
     # Run the function and write to file
-    results = check_endpoints(urls, endpoints, args.timeout, args.workers, args.retries, args.output)
-    write_results_to_file(results, args.output)
+    loop = asyncio.get_event_loop()
+    results = loop.run_until_complete(
+        check_endpoints_in_batches(urls, endpoints, args.timeout, args.workers, args.retries, args.output, args.batchsize)
+    )
+    write_results_to_file(args.output)
 except KeyboardInterrupt:
     print("\nProcess interrupted by user. Exiting...")
 except Exception as e:

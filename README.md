@@ -35,12 +35,17 @@ To run this script, you need to have Python 3 and the required packages installe
 - `-t, --timeout`: Timeout for each request in seconds (default: 5).
 - `-w, --workers`: Number of concurrent threads (default: 10).
 - `-r, --retries`: Number of retries for each request (default: 3).
+- `-b, --batchsize`: Number of requests per batch (default: 1000).
+- `-s, --statuscodes`: Which statuscodes to look for (default: 200,500).
+
 
 ### Examples
 
 Check endpoints from a URL list:
 ```bash
 > python3 endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 5 -w 10 -r 3
+> python3 endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 2 -w 60 -r 2 -b 250
+> python3 endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 4 -w 50 -r 1 -b 777 -s 200,301,302,500,501
 ```
 
 ## Output
