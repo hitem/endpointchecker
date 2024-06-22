@@ -9,18 +9,19 @@ Url to test: `http://example.com/api/v1`
 
 ## Features
 - Multi-threaded for fast execution.
-- Customizable timeout, retries, and number of concurrent workers.
-- Outputs results to a file.
+- Customizable timeout, retries, number of concurrent workers, and batch size.
+- Outputs results to a file in real-time with status code prefixes.
 - Handles SSL warnings.
-- Will accept URL-lists with or without https:// prefix
-  
-![image](https://github.com/hitem/endpointchecker/assets/8977898/37765f6d-da70-4f64-b991-c4ab7c6780ad)
+- Accepts URL lists with or without https:// prefix.
+- Allows filtering and saving of specific status codes using the -s option.
+- Final output is sorted, grouped by status codes, and duplicates are removed
 
+![image](https://github.com/hitem/endpointchecker/assets/8977898/6cb9bae3-0508-4b32-a271-dd8337df83d3)
 
 ## Installation
 To run this script, you need to have Python 3 and the required packages installed. You can install the necessary packages using:
 ```bash
-> pip install requests colorama
+> pip install aiohttp colorama urllib3
 ```
 
 ## Usage
@@ -47,9 +48,6 @@ Check endpoints from a URL list:
 > python3 endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 2 -w 60 -r 2 -b 250
 > python3 endpointchecker.py -u urllist.txt -e endpointlist.txt -o output.txt -t 4 -w 50 -r 1 -b 777 -s 200,301,302,500,501
 ```
-
-## Output
-The results will be written to the specified output file, organized by HTTP status codes.
 
 ## Author
 - **hitemSec**
