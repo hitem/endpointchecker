@@ -25,9 +25,10 @@ urllib3.disable_warnings(InsecureRequestWarning)
 init()
 
 # Setup logging to filter out specific asyncio connection reset errors
-logging.basicConfig(level=logging.INFO)
+# Change between 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'. To supress all, add '+1' after CRITICAL (logging.CRITICAL+1).
+logging.basicConfig(level=logging.CRITICAL)
 logger = logging.getLogger("asyncio")
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.CRITICAL)
 
 # Global variable to handle script running status
 running = True
