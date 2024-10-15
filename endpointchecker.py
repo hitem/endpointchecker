@@ -117,7 +117,10 @@ statuscodes = [int(code) for code in args.statuscodes.split(',')]
 
 # Read URLs from file
 with open(args.urls, 'r') as file:
-    urls = [line.strip().rstrip('/') for line in file.readlines()]
+    urls = [
+        (line.strip().rstrip('/') if line.startswith("http") else "https://" + line.strip().rstrip('/'))
+        for line in file.readlines()
+    ]
 
 # Read endpoints from file
 with open(args.endpoints, 'r') as file:
